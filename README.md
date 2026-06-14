@@ -6,4 +6,5 @@ Nothing in this repo is created or used for the purpose of anything other than f
 
 Current languages used in this repo:
 - Python
-- Javascript (written in a HTML file lol, with some CSS(obviously))
+- Javascript (so far only written in a HTML file, with some CSS(obviously))
+- SQL
