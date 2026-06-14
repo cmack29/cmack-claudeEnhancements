@@ -1,0 +1,10 @@
+pip install pandas openpyxl
+
+# Monthly
+python sales_accrual.py --input sales_data.csv --period 2025-06
+
+# Quarterly
+python sales_accrual.py --input orders.xlsx --period 2025-Q2
+
+# Custom output name
+python sales_accrual.py --input sales_data.csv --period 2025-06 --output june_accrual.xlsx
