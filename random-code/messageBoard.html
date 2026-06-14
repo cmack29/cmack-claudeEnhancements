@@ -5,53 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Message Board</title>
 
-  <!--
-  ============================================================
-  PSEUDOCODE — OVERVIEW
-  ============================================================
-  PROGRAM MessageBoard:
-    DATA:
-      messages = []   // in-memory list of message objects
-
-    ON LOAD:
-      Render empty board state
-
-    ON USER TYPES in textarea:
-      Update character counter (warn at 60, red at 20)
-
-    ON POST BUTTON CLICK (or Ctrl+Enter):
-      IF message text is empty → do nothing
-      ELSE:
-        Create message object { id, author, text, time, likes, liked }
-        Prepend to messages[]
-        Clear textarea
-        Re-render board
-
-    ON LIKE CLICK(id):
-      Find message by id
-      Toggle liked flag
-      Increment or decrement likes count
-      Re-render board
-
-    ON DELETE CLICK(id):
-      Remove message from messages[] by id
-      Re-render board
-
-    RENDER BOARD:
-      IF messages is empty → show empty state
-      ELSE → map each message to an HTML card and inject into DOM
-  ============================================================
-  -->
-
   <style>
-    /* --------------------------------------------------------
-       PSEUDOCODE — STYLES
-       Set dark navy background, gold accent colour (#c9a84c)
-       Georgia serif for body, monospace for meta/timestamps
-       Cards have left gold border, fade-in animation on entry
-    -------------------------------------------------------- */
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Georgia', serif;
@@ -180,37 +135,10 @@
     .btn-like.liked  { border-color: #c9a84c; color: #c9a84c; background: #1e1a0e; } /* toggled state */
     .btn-delete:hover { border-color: #e05c5c; color: #e05c5c; }
 
-    /* Pseudocode: shown when messages[] is empty */
     .empty { text-align: center; color: #444; font-size: 0.9rem; padding: 3rem 0; font-family: monospace; }
   </style>
 </head>
 <body>
-  <!--
-  ============================================================
-  PSEUDOCODE — HTML STRUCTURE
-  ============================================================
-  CONTAINER
-    HEADER
-      h1: "Message Board"
-      p:  subtitle
-
-    POST FORM
-      input#author    ← user's display name (optional)
-      textarea#message ← message body (max 280 chars)
-      FORM ROW
-        span#charCount  ← live character countdown
-        button          ← triggers postMessage()
-
-    BOARD HEADER
-      span#messageCount  ← e.g. "3 messages"
-      span#lastUpdated   ← e.g. "last post 2m ago"
-
-    div#board
-      ← message cards injected here by renderBoard()
-      ← shows empty state div when messages[] is empty
-  ============================================================
-  -->
-
   <div class="container">
     <header>
       <h1>Message Board</h1>
@@ -237,58 +165,17 @@
   </div>
 
   <script>
-    /*
-    ============================================================
-    PSEUDOCODE — DATA
-    ============================================================
-    messages = []
-    // Each message object:
-    // {
-    //   id:    Unix timestamp (used as unique key)
-    //   author: string (defaults to "Anonymous")
-    //   text:   string
-    //   time:   Date object
-    //   likes:  integer (starts at 0)
-    //   liked:  boolean (has current user liked it?)
-    // }
-    ============================================================
-    */
     const messages = [];
 
     const textarea  = document.getElementById('message');
     const charCount = document.getElementById('charCount');
 
-    /*
-    ============================================================
-    PSEUDOCODE — CHARACTER COUNTER
-    ============================================================
-    ON textarea input event:
-      remaining = 280 - textarea.length
-      update charCount text to "${remaining} left"
-      IF remaining < 20 → add class "over"  (red)
-      ELSE IF remaining < 60 → add class "warn" (gold)
-      ELSE → default style (grey)
-    ============================================================
-    */
     textarea.addEventListener('input', () => {
       const remaining = 280 - textarea.value.length;
       charCount.textContent = `${remaining} left`;
       charCount.className = 'char-count' + (remaining < 20 ? ' over' : remaining < 60 ? ' warn' : '');
     });
 
-    /*
-    ============================================================
-    PSEUDOCODE — timeAgo(date)
-    ============================================================
-    FUNCTION timeAgo(date):
-      diff = seconds since date was created
-
-      IF diff < 10  → return "just now"
-      IF diff < 60  → return "${diff}s ago"
-      IF diff < 3600 → return "${minutes}m ago"
-      ELSE           → return formatted time string (HH:MM)
-    ============================================================
-    */
     function timeAgo(date) {
       const diff = Math.floor((Date.now() - date) / 1000);
       if (diff < 10)   return 'just now';
@@ -297,27 +184,6 @@
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — postMessage()
-    ============================================================
-    FUNCTION postMessage():
-      author = author input value (trimmed) OR "Anonymous"
-      text   = textarea value (trimmed)
-
-      IF text is empty → return early (do nothing)
-
-      CREATE message object:
-        id    = Date.now()    // unique timestamp-based ID
-        author, text, time = new Date()
-        likes = 0, liked = false
-
-      PREPEND message to messages[]  // newest first
-      CLEAR textarea
-      RESET charCount to "280 left"
-      CALL renderBoard()
-    ============================================================
-    */
     function postMessage() {
       const author = document.getElementById('author').value.trim() || 'Anonymous';
       const text   = textarea.value.trim();
@@ -331,21 +197,6 @@
       renderBoard();
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — toggleLike(id)
-    ============================================================
-    FUNCTION toggleLike(id):
-      FIND message in messages[] where message.id === id
-      IF not found → return
-
-      FLIP message.liked (true ↔ false)
-      IF now liked   → increment message.likes by 1
-      IF now unliked → decrement message.likes by 1
-
-      CALL renderBoard()
-    ============================================================
-    */
     function toggleLike(id) {
       const msg = messages.find(m => m.id === id);
       if (!msg) return;
@@ -354,45 +205,12 @@
       renderBoard();
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — deleteMessage(id)
-    ============================================================
-    FUNCTION deleteMessage(id):
-      FIND index of message in messages[] where message.id === id
-      IF found → remove 1 element at that index (splice)
-      CALL renderBoard()
-    ============================================================
-    */
     function deleteMessage(id) {
       const idx = messages.findIndex(m => m.id === id);
       if (idx !== -1) messages.splice(idx, 1);
       renderBoard();
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — renderBoard()
-    ============================================================
-    FUNCTION renderBoard():
-      UPDATE messageCount text → "${n} message(s)"
-      UPDATE lastUpdated text  → "last post X ago" (or blank if empty)
-
-      IF messages[] is empty:
-        SET board innerHTML to empty-state div
-        RETURN
-
-      FOR EACH message in messages[]:
-        BUILD HTML card:
-          .message-meta  → author name + timestamp
-          .message-text  → escaped message body
-          .message-actions →
-            like button  (add "liked" class if message.liked is true)
-            delete button
-
-      SET board innerHTML to joined card HTML strings
-    ============================================================
-    */
     function renderBoard() {
       const board   = document.getElementById('board');
       const count   = document.getElementById('messageCount');
@@ -423,19 +241,6 @@
       `).join('');
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — escapeHtml(str)
-    ============================================================
-    FUNCTION escapeHtml(str):
-      REPLACE & → &amp;   // must come first
-      REPLACE < → &lt;
-      REPLACE > → &gt;
-      REPLACE " → &quot;
-      RETURN sanitised string
-      // Prevents XSS: user input is never executed as HTML
-    ============================================================
-    */
     function escapeHtml(str) {
       return str
         .replace(/&/g, '&amp;')
@@ -444,15 +249,6 @@
         .replace(/"/g, '&quot;');
     }
 
-    /*
-    ============================================================
-    PSEUDOCODE — KEYBOARD SHORTCUT
-    ============================================================
-    ON textarea keydown:
-      IF key is Enter AND (Ctrl or Cmd is held):
-        CALL postMessage()
-    ============================================================
-    */
     textarea.addEventListener('keydown', e => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) postMessage();
     });
